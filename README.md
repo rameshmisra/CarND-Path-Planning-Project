@@ -1,5 +1,21 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+
+### Project Writeup
+
+Starting with the steps outlined in the Project Walkthrough video, I implemented the Behavior Planning routine. Instead of using a Cost function, I used a logical process using the concepts outlined in the Finite State Machine discussion in the Behavior Planning lecture. I was concerned that tuning the Cost functions, and optimizing them could very rapidly become unweildy, with changes having unanticipated consequences.
+The Finite State Machine implemented has 3 states: Keep_Lane, Prepare for Change Lane, and Change Lane. The trigger for changing states is proximity to the vehicle in front (same lane as ego_car). Unless the ego_car comes up to a slow moving vehicle ahead,the ego_car will attempt to maintain current lane and drive at a speed of 49MPH (just below the 50MPH speed limit). The allowable proximity is dependent on ego_car's speed-- at higher speeds greater clearance must be maintained, analogous to the "2-second rule" drivers are instructed to follow; this calculation is performed on line 310 in main.cpp. A lane change is predicated on backwards proximity to vehicles in other lanes (and forward too), so that a lane change should not be attempted if a car is not adequately far behind (30m) or is traveling significantly faster (+10mph) than the ego_car. I may need to increase the speed threshold (from 10mph to 20mph) for greater robustness. The logic for Behavior Planning is in lines 346 to 385.
+
+Sensor Fusion data being fed back from the simulator is used to track vehicles that are in close proximity to the ego_car, based on their Frenet s (displacement) coordinate. The code for the tracker is in lines 293-330. There was a glitch in calculating the distance between the ego_car and other cars as the track looped over itself after 6945.5m; the correction on line 187 corrects for this.
+
+The trajectory generation is identical to the discussion in the walk through and utilizes the spline library for smoothing the trajectory. I extended the trajectory generation horizon to 75 points to help further smoothen point transitions.
+
+### Results
+The ego_vehicle is able to go around the track a number of times, usually without any incidents, and meeting all six of the criteria listed in the rubric. However, I believe that the "Sensor Fusion" reported speed of other vehicles is sometimes incorrect, and speeds of vehicles behind the ego_car get calculated to under 20mph, even as they came closer to the ego_car generally traveling above 30mph. It is possible that the simulator may be significantly modulating speeds of adjacent vehicles in order to challenge the ego_car.
+I have noticed situations where the other cars "trap" the ego_car (nicely implemented simulator), which does simulate worst case scenarios that are less likely to occur in the real world, even though I concede that a self-driving car ought to be able to handle any scenario in order to be better than a human driver. Under such a situation, based on the logic implemented, the ego_car just stays in the same lane accelerating & decelerating like the surrounding cars in order to prevent a collision, but then is stuck traveling at a low average speed, and is unable to slow down significantly and then switch over 2 lanes over where there is no obstruction.
+
+Using a cost function based approach that also looks at potential trajectories two lanes over, should enable the ego_car to get out of situations when it is surrounded by slow cars on three sides and a road boundary on the other. I am looking at implementing that as well, but submitting the project as it meets the rubric criteria.
+I would also like to evaluate the impact of slower computational hardware in order to make the system more robust; I ran the code on an i7-7700k cpu with a dedicated graphics card.
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).
@@ -86,55 +102,4 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
 
